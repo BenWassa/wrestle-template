@@ -6,7 +6,6 @@ const PRECACHE_ASSETS = [
   './tailwind.min.css',
   './js/app.js',
   './js/ui.js',
-  './js/firebase.js',
   './js/storage.js',
   './manifest.json',
   './WrestleIcon.png'
