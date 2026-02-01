@@ -1,0 +1,21 @@
+{
+  "name": "MatMind PWA",
+  "short_name": "MatMind",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "A simple training log for wrestling practice sessions.",
+  "icons": [
+    {
+      "src": "Wrestleicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "Wrestleicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

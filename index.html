@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MatMind</title>
+    <!-- Tailwind CSS (local build) -->
+    <link rel="stylesheet" href="tailwind.min.css">
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="WrestleIcon.png">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans h-screen overflow-hidden flex flex-col selection:bg-amber-500/30">
+
+    <!-- Loading / Auth Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-[60] bg-slate-950 flex items-center justify-center flex-col gap-4 transition-opacity duration-500">
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-slate-800 border-t-amber-500 rounded-full animate-spin"></div>
+            <i data-lucide="dumbbell" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-slate-500"></i>
+        </div>
+        <p class="text-slate-500 font-mono text-xs tracking-[0.2em] animate-pulse">SYNCING DATA</p>
+    </div>
+    <!-- Status Banners -->
+    <div id="auth-error-banner" class="hidden fixed top-4 left-4 right-4 bg-red-500/10 text-red-400 px-4 py-3 rounded-xl z-50 text-xs border border-red-500/20 backdrop-blur-md"></div>
+    
+    <!-- Left Sidebar Navigation -->
+    <aside id="sidebar" class="p-6">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-black text-white">Menu</h2>
+            <button id="sidebar-close" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-800 transition-colors">
+                <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+            </button>
+        </div>
+        <nav class="space-y-2">
+            <button id="menu-import" class="w-full px-4 py-3 flex items-center gap-3 text-sm text-slate-300 hover:bg-slate-800 rounded-xl transition-colors">
+                <i data-lucide="download" class="w-5 h-5 text-amber-500"></i> Import Data
+            </button>
+            <button id="menu-export" class="w-full px-4 py-3 flex items-center gap-3 text-sm text-slate-300 hover:bg-slate-800 rounded-xl transition-colors">
+                <i data-lucide="upload" class="w-5 h-5 text-amber-500"></i> Export Data
+            </button>
+            <div class="border-t border-slate-800 my-4"></div>
+            <button id="menu-about" class="w-full px-4 py-3 flex items-center gap-3 text-sm text-slate-300 hover:bg-slate-800 rounded-xl transition-colors">
+                <i data-lucide="info" class="w-5 h-5 text-slate-500"></i> About
+            </button>
+        </nav>
+    </aside>
+    <!-- Sidebar Overlay -->
+    <div id="sidebar-overlay"></div>
+    
+    <!-- Header / Sync Status -->
+    <header class="flex-none px-6 pt-4 pb-3 flex items-center z-10 bg-slate-950/40 backdrop-blur-lg border-b border-slate-800/50">
+        <button id="menu-btn" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-900/40 border border-slate-700/50 hover:bg-slate-800/60 backdrop-blur-md transition-all">
+            <i data-lucide="menu" class="w-5 h-5 text-slate-400"></i>
+        </button>
+        <div class="flex-1 text-center">
+            <h1 class="text-xl font-black text-white tracking-tight">MAT<span class="text-amber-500">MIND</span></h1>
+            <p id="current-date" class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Loading...</p>
+        </div>
+        <div id="sync-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/40 border border-slate-700/50 backdrop-blur-md transition-all cursor-pointer">
+            <div class="w-2 h-2 rounded-full bg-slate-500"></div>
+            <span class="text-[10px] font-bold text-slate-400">OFFLINE</span>
+        </div>
+    </header>
+
+    <!-- Main Scrollable Area -->
+    <main id="app-container" class="flex-1 overflow-y-auto hide-scrollbar relative w-full max-w-lg mx-auto pb-24 px-4 space-y-8">
+        <!-- VIEW: Dashboard -->
+        <div id="view-dashboard" class="space-y-6 animate-fade-in pt-2">
+            
+            <!-- Rank Card (Fully clickable) -->
+            <div id="rank-card" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900/60 via-slate-900/50 to-slate-800/40 border border-slate-700/50 backdrop-blur-md p-6 shadow-2xl cursor-pointer group transition-all active:scale-[0.98] hover:border-slate-700">
+                <!-- Background Decoration -->
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all"></div>
+                
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <div class="text-[10px] uppercase tracking-widest text-amber-500 font-bold mb-1">Current Rank</div>
+                        <h2 id="level-name" class="text-3xl font-black text-white mb-1">Rookie</h2>
+                        <div class="flex items-baseline gap-1">
+                            <span id="total-hours" class="text-xl font-medium text-slate-300">0</span>
+                            <span class="text-xs text-slate-500">hours logged</span>
+                        </div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center border border-slate-700 shadow-inner">
+                        <i data-lucide="trophy" class="w-6 h-6 text-amber-500"></i>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-[10px] font-bold text-slate-500 mb-2">
+                        <span>PROGRESS TO NEXT RANK</span>
+                        <span id="hours-next">0/10 HRS</span>
+                    </div>
+                    <div class="h-2 w-full bg-slate-950 rounded-full overflow-hidden shadow-inner">
+                        <div id="level-progress" class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats Row -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-md hover:bg-slate-900/60 transition-all">
+                    <div class="text-slate-500 text-[10px] font-bold uppercase mb-2">7-Day Volume</div>
+                    <div class="text-2xl font-black text-white" id="weekly-hours">0.0<span class="text-sm font-medium text-slate-500 ml-1">hrs</span></div>
+                </div>
+                <div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-md hover:bg-slate-900/60 transition-all">
+                    <div class="text-slate-500 text-[10px] font-bold uppercase mb-2">Weekly Streak</div>
+                    <div class="text-2xl font-black text-white" id="weekly-streak">0<span class="text-sm font-medium text-slate-500 ml-1">weeks</span></div>
+                </div>
+            </div>
+
+            <!-- Consistency Heatmap (30-Day View) -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-end px-1">
+                    <h3 class="text-sm font-bold text-slate-300">Consistency (30 Days)</h3>
+                    <div class="flex items-center gap-3">
+                        <span id="streak-counter" class="text-xs font-mono text-emerald-400">0 Week Streak</span>
+                        <span id="consistency-30" class="text-xs font-mono text-slate-400">0/30</span>
+                    </div>
+                </div>
+
+                <!-- New Container Structure -->
+                <div class="heatmap-card">
+                    <div class="heatmap-container">
+                        <!-- Header Row -->
+                        <div class="heatmap-row-grid"> 
+                            <div class="heatmap-header-cell">S</div>
+                            <div class="heatmap-header-cell">M</div>
+                            <div class="heatmap-header-cell">T</div>
+                            <div class="heatmap-header-cell">W</div>
+                            <div class="heatmap-header-cell">T</div>
+                            <div class="heatmap-header-cell">F</div>
+                            <div class="heatmap-header-cell">S</div>
+                        </div>
+                        
+                        <!-- Grid Content -->
+                        <div id="heatmap-grid" class="flex flex-col gap-1.5">
+                            <!-- Rows injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center px-1">
+                    <h3 class="text-sm font-bold text-slate-300">Recent Sessions</h3>
+                    <button class="nav-link text-xs font-bold text-amber-500 hover:text-amber-400" data-target="journal">VIEW ALL</button>
+                </div>
+                <div id="recent-list" class="space-y-3">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: Log Session -->
+        <div id="view-log" class="hidden pt-2 animate-fade-in pb-20">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-white">Log Session</h2>
+                <button id="btn-sample" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-400">Demo Fill</button>
+            </div>
+
+            <form id="log-form" class="space-y-6">
+                <!-- Session Type Grid -->
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="stype" value="Practice" class="peer hidden" checked>
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 transition-all text-center">
+                            <i data-lucide="users" class="w-6 h-6 mx-auto mb-2 text-slate-500 peer-checked:text-amber-500"></i>
+                            <span class="text-xs font-bold text-slate-400 peer-checked:text-white">Practice</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="stype" value="Live Wrestling" class="peer hidden">
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 peer-checked:border-red-500 peer-checked:bg-red-500/10 transition-all text-center">
+                            <i data-lucide="swords" class="w-6 h-6 mx-auto mb-2 text-slate-500 peer-checked:text-red-500"></i>
+                            <span class="text-xs font-bold text-slate-400 peer-checked:text-white">Live</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="stype" value="Drilling" class="peer hidden">
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 transition-all text-center">
+                            <i data-lucide="repeat" class="w-6 h-6 mx-auto mb-2 text-slate-500 peer-checked:text-blue-500"></i>
+                            <span class="text-xs font-bold text-slate-400 peer-checked:text-white">Drilling</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="stype" value="Conditioning" class="peer hidden">
+                        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 transition-all text-center">
+                            <i data-lucide="heart-pulse" class="w-6 h-6 mx-auto mb-2 text-slate-500 peer-checked:text-emerald-500"></i>
+                            <span class="text-xs font-bold text-slate-400 peer-checked:text-white">Cardio</span>
+                        </div>
+                    </label>
+                    <input id="inp-type" type="hidden" value="Practice"> 
+                </div>
+
+                <!-- Sliders Container -->
+                <div class="bg-slate-900 rounded-3xl p-6 space-y-8 border border-slate-800">
+                    <!-- Duration -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <label class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Duration</label>
+                            <span class="text-xl font-mono font-bold text-white"><span id="val-duration">90</span> min</span>
+                        </div>
+                        <input id="inp-duration" type="range" min="15" max="180" step="15" value="90" class="w-full accent-amber-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                    </div>
+
+                    <!-- Intensity -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <label class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Intensity (RPE)</label>
+                            <span id="val-intensity" class="text-xl font-mono font-bold text-amber-500">5/10</span>
+                        </div>
+                        <input id="inp-intensity" type="range" min="1" max="10" value="5" class="w-full accent-amber-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-600 font-bold uppercase">
+                            <span>Light Flow</span>
+                            <span>Match Pace</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase font-bold text-slate-500 tracking-widest pl-2">Technique & Notes</label>
+                    <textarea id="inp-notes" placeholder="Focus points, moves hit, things to fix..." class="w-full h-32 bg-slate-900 text-slate-200 p-4 rounded-2xl border border-slate-800 focus:border-amber-500 outline-none resize-none text-sm leading-relaxed"></textarea>
+                </div>
+                
+                <!-- Hidden inputs for legacy compat -->
+                <input id="inp-physical" type="hidden" value="5">
+                <input id="inp-mental" type="hidden" value="5">
+
+                <!-- Submit -->
+                <button type="submit" class="w-full py-5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm uppercase tracking-widest rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i data-lucide="save" class="w-5 h-5"></i> Log Workout
+                </button>
+            </form>
+        </div>
+
+        <!-- VIEW: Insights -->
+        <div id="view-insights" class="hidden pt-2 space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-black text-white mb-4">Performance</h2>
+                <div class="flex items-center gap-3">
+                    <label class="text-xs text-slate-400">Range</label>
+                    <select id="select-range" class="bg-slate-900 text-slate-200 rounded px-2 py-1 text-sm">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">Last 365 days</option>
+                        <option value="0">All time</option>
+                    </select>
+                </div>
+            </div>
+            <div class="text-xs text-slate-500 mb-2">Stats use session dates (not import time)</div>
+            
+            <!-- Main Chart Card -->
+            <div class="bg-slate-900 rounded-3xl p-4 border border-slate-800 shadow-xl">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Volume vs Intensity (Last 10)</h3>
+                <div class="relative h-48 w-full">
+                    <canvas id="chart-volume"></canvas>
+                </div>
+            </div>
+
+            <!-- Breakdown Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-900 rounded-3xl p-4 border border-slate-800">
+                     <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Type Distribution</h3>
+                     <div class="relative h-32 w-full flex items-center justify-center">
+                        <canvas id="chart-types"></canvas>
+                     </div>
+                </div>
+                
+                <!-- Stats Box -->
+                <div class="bg-slate-900 rounded-3xl p-4 border border-slate-800 flex flex-col justify-center space-y-4">
+                    <div>
+                        <div class="text-[10px] text-slate-500 uppercase">Top Pattern</div>
+                        <div id="top-keyword" class="text-lg font-bold text-white capitalize">--</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-500 uppercase">Mat IQ Score</div>
+                        <div id="mat-iq" class="text-2xl font-black text-indigo-400">0</div>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">
+                        <div>Last sync: <span id="last-sync">-</span></div>
+                    </div>
+                </div>
+            </div>
+            
+             <div id="insights-content" class="text-sm text-slate-400 bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                 <!-- Text insights injected here -->
+             </div>
+        </div>
+
+        <!-- VIEW: Journal -->
+        <div id="view-journal" class="hidden pt-2 space-y-4 animate-fade-in">
+            <h2 class="text-2xl font-black text-white">Logbook</h2>
+            <div id="journal-list" class="space-y-4 pb-24">
+                <!-- List items -->
+            </div>
+        </div>
+        
+    </main>
+
+    <!-- Floating Action Button -->
+    <button id="fab" class="w-14 h-14 bg-amber-500 hover:bg-amber-400 rounded-full shadow-lg shadow-amber-500/30 flex items-center justify-center text-slate-900 transition-transform active:scale-90">
+        <i data-lucide="plus" class="w-8 h-8"></i>
+    </button>
+
+    <!-- Bottom Navigation Bar -->
+    <nav id="bottom-nav">
+        <button class="nav-btn nav-btn-side" data-target="journal">
+            <i data-lucide="book" class="w-5 h-5"></i>
+        </button>
+        <button class="nav-btn nav-btn-center" data-target="dashboard">
+            <i data-lucide="home" class="w-6 h-6"></i>
+        </button>
+        <button class="nav-btn nav-btn-side" data-target="insights">
+            <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+        </button>
+    </nav>
+
+    <!-- File Inputs & Toasts -->
+    <input id="file-import" type="file" accept=".json,application/json" class="hidden" />
+    <!-- Note Modal -->
+    <div id="modal-note" class="hidden fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/40 p-4" aria-hidden="true">
+        <div class="bg-slate-900 rounded-2xl w-full max-w-lg p-4 shadow-xl">
+            <div class="flex items-start justify-between gap-2">
+                <div>
+                    <div id="modal-note-type" class="text-xs text-slate-400">Practice</div>
+                    <h3 id="modal-note-date" class="text-lg font-bold text-white">Date</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="modal-copy" class="text-slate-300 text-sm px-3 py-1 rounded bg-slate-800/40">Copy</button>
+                    <button id="modal-share" class="text-slate-300 text-sm px-3 py-1 rounded bg-slate-800/40">Share</button>
+                    <button id="modal-close" class="text-sm px-3 py-1 rounded bg-slate-700 text-white">Close</button>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div id="modal-note-content" class="text-sm text-slate-300 leading-relaxed max-h-96 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings panel removed: settings managed silently (ping ON by default) -->
+    <div id="toast" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl z-[70] text-sm font-bold flex items-center gap-2 backdrop-blur-md">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <span id="toast-msg">Success</span>
+    </div>
+
+    <!-- Levels / Gamification Modal -->
+    <div id="modal-levels" class="hidden fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4" aria-hidden="true">
+        <div class="bg-slate-900 w-full sm:max-w-md h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col border-t sm:border border-slate-700/50">
+            
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/50 rounded-t-3xl sm:rounded-t-2xl">
+                <div>
+                    <h2 class="text-xl font-black text-white">Wrestler's Journey</h2>
+                    <p class="text-xs text-slate-400">Mat time milestones</p>
+                </div>
+                <button id="close-levels" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-6 hide-scrollbar">
+                
+                <!-- Hero Stat -->
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 mx-auto bg-slate-800 rounded-full flex items-center justify-center border-4 border-amber-500/20 shadow-lg shadow-amber-500/10 mb-3">
+                        <i data-lucide="crown" class="w-10 h-10 text-amber-500"></i>
+                    </div>
+                    <div class="text-3xl font-black text-white" id="modal-total-hours">0.0</div>
+                    <div class="text-xs uppercase tracking-widest text-slate-500 font-bold">Total Mat Hours</div>
+                </div>
+
+                <!-- Timeline -->
+                <div id="levels-timeline" class="level-timeline">
+                    <!-- Dynamic content injected by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
