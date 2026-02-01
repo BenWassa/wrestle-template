@@ -1,6 +1,6 @@
 # MatMind - LocalStorage Version
 
-A wrestling training log PWA that stores data locally in the browser using localStorage. No Firebase required - perfect for portfolio deployment.
+A wrestling training log PWA that stores data locally in the browser using localStorage.
 
 ## Features
 
