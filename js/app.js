@@ -1,5 +1,5 @@
 import { watchSessions } from './storage.js';
-import { initUI, renderApp, state, updateSyncIndicator } from './ui.js';
+import { initUI, renderApp, state, updateSyncIndicator, showDemoModal } from './ui.js';
 
 // Init UI event listeners
 initUI();
@@ -12,6 +12,12 @@ export async function init() {
   unsubscribeWatcher = watchSessions(null, (data) => { state.sessions = data; state.firestoreError = null; renderApp(); }, (err) => { console.error('watchSessions error', err); state.firestoreError = err.message || String(err); renderApp(); });
   document.getElementById('loading-screen').classList.add('hidden');
   updateSyncIndicator();
+
+  // Show demo modal on first visit if no data
+  const dismissed = localStorage.getItem('demo-modal-dismissed') === 'true';
+  if (!state.isDemoMode && !dismissed && state.sessions.length === 0) {
+    setTimeout(() => showDemoModal(), 600);
+  }
 }
 
 // Auto-init

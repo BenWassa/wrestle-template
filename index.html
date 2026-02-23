@@ -390,6 +390,64 @@
         </div>
     </div>
 
+    <!-- Demo Welcome Modal -->
+    <div id="demo-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
+            <!-- Top accent -->
+            <div class="h-1 w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600"></div>
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="play-circle" class="w-5 h-5 text-amber-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-white">See it in action</h3>
+                        <p class="text-xs text-slate-400">Load a full year of sample data</p>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-300 mb-5 leading-relaxed">
+                    New here? Load <span class="text-amber-400 font-semibold">demo data</span> to explore all features: ranks, badges, insights, and charts, before logging your own sessions.
+                </p>
+                <div class="space-y-2">
+                    <button id="demo-modal-confirm" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-bold text-sm transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        Load Demo Data
+                    </button>
+                    <button id="demo-modal-dismiss" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-300 font-semibold text-sm transition-all">
+                        Start Fresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exit Demo Confirm Modal -->
+    <div id="exit-demo-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl overflow-hidden">
+            <div class="h-1 w-full bg-gradient-to-r from-slate-600 to-slate-500"></div>
+            <div class="p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="trash-2" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-white">Exit Demo Mode?</h3>
+                        <p class="text-xs text-slate-400">This will clear all demo data</p>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-300 mb-5 leading-relaxed">Demo data will be removed and you'll start with a clean slate. Your real sessions won't be affected.</p>
+                <div class="space-y-2">
+                    <button id="exit-demo-confirm" class="w-full py-3 rounded-xl bg-slate-700 hover:bg-slate-600 active:scale-[0.98] text-white font-bold text-sm transition-all">
+                        Yes, Exit Demo
+                    </button>
+                    <button id="exit-demo-cancel" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-400 font-semibold text-sm transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Logic -->
     <script type="module" src="js/app.js"></script>
 </body>

@@ -987,10 +987,48 @@ export async function updateSyncIndicator() {
     };
 }
 
+// Demo Modal Helpers
+export function showDemoModal() {
+    const modal = document.getElementById('demo-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    document.getElementById('demo-modal-confirm').onclick = () => {
+        modal.classList.add('hidden');
+        _doLoadDemoData();
+    };
+    document.getElementById('demo-modal-dismiss').onclick = () => {
+        modal.classList.add('hidden');
+        localStorage.setItem('demo-modal-dismissed', 'true');
+    };
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); }, { once: true });
+}
+
+function showExitDemoModal() {
+    const modal = document.getElementById('exit-demo-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    document.getElementById('exit-demo-confirm').onclick = () => {
+        modal.classList.add('hidden');
+        _doClearDemoData();
+    };
+    document.getElementById('exit-demo-cancel').onclick = () => modal.classList.add('hidden');
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); }, { once: true });
+}
+
 // Demo Data Functions
 function loadDemoData() {
-    if (!confirm('Load demo data for Team Captain level? This will replace all current data.')) return;
-    
+    showDemoModal();
+}
+
+function clearDemoData() {
+    showExitDemoModal();
+}
+
+function _doLoadDemoData() {
     const mockSessions = generateMockData();
     localStorage.setItem('wrestle-sessions', JSON.stringify(mockSessions));
     localStorage.setItem('is-demo-mode', 'true');
@@ -1001,11 +1039,10 @@ function loadDemoData() {
     showToast('Demo data loaded!');
 }
 
-function clearDemoData() {
-    if (!confirm('Exit demo mode and clear all data?')) return;
-    
+function _doClearDemoData() {
     localStorage.removeItem('wrestle-sessions');
     localStorage.removeItem('is-demo-mode');
+    localStorage.removeItem('demo-modal-dismissed');
     state.sessions = [];
     state.isDemoMode = false;
     renderApp();
